@@ -83,20 +83,21 @@ module CrowdFlower
     end
     
     def download_csv(type = :full, filename = nil)
-      filename ||= "#{type.to_s[0].chr}#{@id}.csv"
-      res = connection.get("#{resource_uri}/#{@id}.csv", {:format => :csv, :query => {:type => type}})
+      full = ( type == :full )
+      filename ||= "#{full ? 'f' : 'a'}#{@id}.csv"
+      res = connection.get("#{resource_uri}/#{@id}.csv", {:format => :csv, :query => {:full => full}})
       self.class.verify_response res
       puts "Status... #{res.code.inspect}"
       if res.code == 202
         puts "CSV Generating... Trying again in 10 seconds."
         Kernel.sleep 10
-        download_csv(type, filename)
+        download_csv(full, filename)
       else
         puts "CSV written to: #{File.expand_path(filename)}"
-        File.open(filename, "w") {|f| f.puts res.body }
+        File.open(filename, "w") { |f| f.puts res.body }
       end
     end
-    
+
     def pause
       connection.get("#{resource_uri}/#{@id}/pause")
     end
